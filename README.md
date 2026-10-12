@@ -88,6 +88,78 @@ EndlessScrollView(
 );
 ```
 
+## Styling
+
+The default footer reads an `EndlessScrollStyle` theme extension. Register it
+once and every endless list picks it up:
+
+```dart
+MaterialApp(
+  theme: ThemeData(
+    extensions: const [
+      EndlessScrollStyle(
+        loadingColor: Colors.teal,
+        footerPadding: EdgeInsets.all(24),
+      ),
+    ],
+  ),
+);
+```
+
+| Field | Purpose |
+| --- | --- |
+| `loadingColor` | Color of the default loading indicator |
+| `errorTextStyle` | Text style of the default error message |
+| `retryStyle` | Button style of the default retry button |
+| `footerPadding` | Padding around the default footer |
+
+A custom `loadingBuilder`, `errorBuilder` or `endOfListBuilder` wins over the
+style.
+
+### With atomic_ui_kit
+
+[atomic_ui_kit](https://pub.dev/packages/atomic_ui_kit) supplies the visuals
+for a neumorphic footer:
+
+```dart
+EndlessScrollView(
+  // ...
+  loadingBuilder: (context) => const Padding(
+    padding: EdgeInsets.all(16),
+    child: NeumorphicCard(child: Center(child: CircularProgressIndicator())),
+  ),
+  endOfListBuilder: (context) => const Padding(
+    padding: EdgeInsets.all(16),
+    child: NeumorphicCard(child: Center(child: Text('All items loaded.'))),
+  ),
+);
+```
+
+## Using with other packages
+
+The widget works with any data source. With
+[json_rest_client](https://pub.dev/packages/json_rest_client) one page load
+is short:
+
+```dart
+final client = JsonRestClient(
+  baseUrl: 'https://api.example.com',
+  tokenStore: tokenStore,
+);
+
+Future<Page> fetchPage(int page) async {
+  final result = await client.get<Page>(
+    '/items',
+    query: {'page': '$page'},
+    decoder: Page.fromJson,
+  );
+  return result ?? const Page(items: [], hasMore: false);
+}
+```
+
+The [`example/`](example/) app shows all three wirings: a Riverpod list, an
+atomic_ui_kit-styled list and a json_rest_client-backed list.
+
 ## Behavior
 
 - The widget requests the next page when the remaining scroll distance is at

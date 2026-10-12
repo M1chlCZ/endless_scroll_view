@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'endless_scroll_style.dart';
+
 /// A scroll view that requests more items when the user nears the end.
 ///
 /// The widget owns the scroll mechanics and the footer. The caller owns the
@@ -180,25 +182,32 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
   }
 
   Widget _footer(BuildContext context) {
+    final style = EndlessScrollStyle.of(context);
     if (widget.isLoadingMore) {
       return widget.loadingBuilder?.call(context) ??
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
+          Padding(
+            padding: style?.footerPadding ?? const EdgeInsets.all(16),
+            child: Center(
+              child: CircularProgressIndicator(color: style?.loadingColor),
+            ),
           );
     }
     if (widget.loadMoreError != null) {
       return widget.errorBuilder?.call(context) ??
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: style?.footerPadding ?? const EdgeInsets.all(16),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('The next page could not be loaded.'),
+                  Text(
+                    'The next page could not be loaded.',
+                    style: style?.errorTextStyle,
+                  ),
                   if (widget.onRetry != null)
                     TextButton(
                       onPressed: widget.onRetry,
+                      style: style?.retryStyle,
                       child: const Text('Retry'),
                     ),
                 ],

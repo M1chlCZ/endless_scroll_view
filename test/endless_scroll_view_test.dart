@@ -130,6 +130,54 @@ void main() {
 
     expect(find.text('All loaded'), findsOneWidget);
   });
+
+  testWidgets('applies the style to the error footer', (tester) async {
+    await tester.pumpWidget(
+      _Harness(
+        initialCount: 20,
+        error: 'boom',
+        onRetry: () {},
+        style: const EndlessScrollStyle(
+          errorTextStyle: TextStyle(color: Color(0xFF112233)),
+        ),
+      ),
+    );
+
+    await tester.drag(find.byType(ListView), const Offset(0, -1400));
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('The next page could not be loaded.'),
+      200,
+    );
+
+    final text = tester.widget<Text>(
+      find.text('The next page could not be loaded.'),
+    );
+    expect(text.style?.color, const Color(0xFF112233));
+  });
+
+  testWidgets('applies the style to the loading footer', (tester) async {
+    final key = GlobalKey<_HarnessState>();
+    await tester.pumpWidget(
+      _Harness(
+        key: key,
+        initialCount: 20,
+        autoComplete: false,
+        style: const EndlessScrollStyle(loadingColor: Color(0xFF445566)),
+      ),
+    );
+
+    await tester.drag(find.byType(ListView), const Offset(0, -1300));
+    await tester.pump();
+    await tester.scrollUntilVisible(find.byType(CircularProgressIndicator), 200);
+
+    final spinner = tester.widget<CircularProgressIndicator>(
+      find.byType(CircularProgressIndicator),
+    );
+    expect(spinner.color, const Color(0xFF445566));
+    key.currentState!.completeLoad();
+    await tester.pumpAndSettle();
+  });
 }
 
 class _Harness extends StatefulWidget {
@@ -142,6 +190,7 @@ class _Harness extends StatefulWidget {
     this.autoComplete = true,
     this.emptyBuilder,
     this.endOfListBuilder,
+    this.style,
   });
 
   final int initialCount;
@@ -151,6 +200,7 @@ class _Harness extends StatefulWidget {
   final bool autoComplete;
   final WidgetBuilder? emptyBuilder;
   final WidgetBuilder? endOfListBuilder;
+  final EndlessScrollStyle? style;
 
   @override
   State<_Harness> createState() => _HarnessState();
@@ -185,6 +235,9 @@ class _HarnessState extends State<_Harness> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        extensions: [if (widget.style != null) widget.style!],
+      ),
       home: Scaffold(
         body: EndlessScrollView(
           itemCount: count,

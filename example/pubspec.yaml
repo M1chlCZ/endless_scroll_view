@@ -1,5 +1,5 @@
 name: endless_scroll_view_example
-description: A Riverpod example for the endless_scroll_view package.
+description: Riverpod, atomic_ui_kit and json_rest_client examples for endless_scroll_view.
 publish_to: none
 version: 1.0.0
 
@@ -7,11 +7,15 @@ environment:
   sdk: ^3.11.0
 
 dependencies:
+  atomic_ui_kit:
+    path: ../../atomic_ui_kit
   endless_scroll_view:
     path: ../
   flutter:
     sdk: flutter
   flutter_riverpod: ^3.4.3
+  json_rest_client:
+    path: ../../json_rest_client
 
 dev_dependencies:
   flutter_lints: ^6.0.0
