@@ -126,11 +126,11 @@ EndlessScrollView(
   // ...
   loadingBuilder: (context) => const Padding(
     padding: EdgeInsets.all(16),
-    child: NeumorphicCard(child: Center(child: CircularProgressIndicator())),
+    child: NeuContainer(child: Center(child: CircularProgressIndicator())),
   ),
   endOfListBuilder: (context) => const Padding(
     padding: EdgeInsets.all(16),
-    child: NeumorphicCard(child: Center(child: Text('All items loaded.'))),
+    child: NeuContainer(child: Center(child: Text('All items loaded.'))),
   ),
 );
 ```

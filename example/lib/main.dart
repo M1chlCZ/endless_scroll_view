@@ -256,13 +256,13 @@ class StyledItemsPage extends ConsumerWidget {
           const Center(child: CircularProgressIndicator()),
       loadingBuilder: (context) => const Padding(
         padding: EdgeInsets.all(16),
-        child: NeumorphicCard(
+        child: NeuContainer(
           child: Center(child: CircularProgressIndicator()),
         ),
       ),
       endOfListBuilder: (context) => const Padding(
         padding: EdgeInsets.all(16),
-        child: NeumorphicCard(
+        child: NeuContainer(
           child: Center(child: Text('All items loaded.')),
         ),
       ),
