@@ -1,0 +1,22 @@
+name: endless_scroll_view
+description: A scroll view that loads more items when the user nears the end.
+version: 0.1.0
+repository: https://github.com/M1chlCZ/endless_scroll_view
+topics:
+  - infinite-scroll
+  - pagination
+  - scroll
+  - list
+  - widget
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
