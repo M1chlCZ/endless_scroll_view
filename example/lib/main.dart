@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:atomic_ui_kit/atomic_ui_kit.dart';
 import 'package:endless_scroll_view/endless_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:json_rest_client/json_rest_client.dart';
 
 void main() {
@@ -100,7 +102,58 @@ final fakeItemsProvider = NotifierProvider<FakeItemsNotifier, PagedItems>(
   FakeItemsNotifier.new,
 );
 
-/// One character page of the public Rick and Morty API.
+/// The bundled character pages. The example needs no network.
+const characterPages = <int, Map<String, Object?>>{
+  1: {
+    'info': {'next': 'page-2'},
+    'results': [
+      {'name': 'Ada Lovelace'},
+      {'name': 'Alan Turing'},
+      {'name': 'Grace Hopper'},
+      {'name': 'Edsger Dijkstra'},
+      {'name': 'Barbara Liskov'},
+    ],
+  },
+  2: {
+    'info': {'next': 'page-3'},
+    'results': [
+      {'name': 'Donald Knuth'},
+      {'name': 'Margaret Hamilton'},
+      {'name': 'Ken Thompson'},
+      {'name': 'Radia Perlman'},
+      {'name': 'Tony Hoare'},
+    ],
+  },
+  3: {
+    'info': {'next': null},
+    'results': [
+      {'name': 'Katherine Johnson'},
+      {'name': 'Dennis Ritchie'},
+    ],
+  },
+};
+
+/// Answers `GET /character` from the bundled pages.
+class LocalJsonClient extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final page = int.tryParse(request.url.queryParameters['page'] ?? '1') ?? 1;
+    final body = jsonEncode(
+      characterPages[page] ??
+          const {
+            'info': {'next': null},
+            'results': [],
+          },
+    );
+    return http.StreamedResponse(
+      Stream.value(utf8.encode(body)),
+      200,
+      headers: {'content-type': 'application/json'},
+    );
+  }
+}
+
+/// One page of characters.
 class CharacterPage {
   const CharacterPage({required this.names, required this.hasMore});
 
@@ -119,16 +172,20 @@ class CharacterPage {
   }
 }
 
-/// Reads no token. The public API needs none.
+/// Reads no token. The bundled transport needs none.
 class EmptyTokenStore implements TokenStore {
   @override
   Future<String?> read(String key) async => null;
 }
 
-/// Loads pages from the Rick and Morty API with json_rest_client.
+/// The number of characters per page.
+const characterPageSize = 5;
+
+/// Loads the bundled character pages through json_rest_client.
 class CharactersNotifier extends Notifier<PagedItems> {
   final JsonRestClient _client = JsonRestClient(
-    baseUrl: 'https://rickandmortyapi.com/api',
+    baseUrl: 'https://characters.example/api',
+    client: LocalJsonClient(),
     tokenStore: EmptyTokenStore(),
   );
 
@@ -146,7 +203,7 @@ class CharactersNotifier extends Notifier<PagedItems> {
     try {
       final page = await _client.get<CharacterPage>(
         '/character',
-        query: {'page': '${state.items.length ~/ pageSize + 1}'},
+        query: {'page': '${state.items.length ~/ characterPageSize + 1}'},
         decoder: CharacterPage.fromJson,
       );
       final resolved = page ?? const CharacterPage(names: [], hasMore: false);
@@ -256,21 +313,17 @@ class StyledItemsPage extends ConsumerWidget {
           const Center(child: CircularProgressIndicator()),
       loadingBuilder: (context) => const Padding(
         padding: EdgeInsets.all(16),
-        child: NeuContainer(
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        child: NeuContainer(child: Center(child: CircularProgressIndicator())),
       ),
       endOfListBuilder: (context) => const Padding(
         padding: EdgeInsets.all(16),
-        child: NeuContainer(
-          child: Center(child: Text('All items loaded.')),
-        ),
+        child: NeuContainer(child: Center(child: Text('All items loaded.'))),
       ),
     );
   }
 }
 
-/// The json_rest_client tab: the public Rick and Morty API.
+/// The json_rest_client tab: bundled JSON through a local transport.
 class CharactersPage extends ConsumerWidget {
   const CharactersPage({super.key});
 
@@ -294,7 +347,7 @@ class CharactersPage extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('The characters could not be loaded.'),
+            const Text('The characters failed to load.'),
             TextButton(
               onPressed: notifier.loadMore,
               child: const Text('Retry'),

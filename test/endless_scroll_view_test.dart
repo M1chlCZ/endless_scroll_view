@@ -67,7 +67,10 @@ void main() {
 
     await tester.drag(find.byType(ListView), const Offset(0, -1300));
     await tester.pump();
-    await tester.scrollUntilVisible(find.byType(CircularProgressIndicator), 200);
+    await tester.scrollUntilVisible(
+      find.byType(CircularProgressIndicator),
+      200,
+    );
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     key.currentState!.completeLoad();
@@ -77,21 +80,17 @@ void main() {
   testWidgets('shows the error footer and retries', (tester) async {
     var retries = 0;
     await tester.pumpWidget(
-      _Harness(
-        initialCount: 20,
-        error: 'boom',
-        onRetry: () => retries++,
-      ),
+      _Harness(initialCount: 20, error: 'boom', onRetry: () => retries++),
     );
 
     await tester.drag(find.byType(ListView), const Offset(0, -1400));
     await tester.pump();
     await tester.scrollUntilVisible(
-      find.text('The next page could not be loaded.'),
+      find.text('The next page failed to load.'),
       200,
     );
 
-    expect(find.text('The next page could not be loaded.'), findsOneWidget);
+    expect(find.text('The next page failed to load.'), findsOneWidget);
     await tester.tap(find.text('Retry'));
     await tester.pump();
     expect(retries, 1);
@@ -146,12 +145,12 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -1400));
     await tester.pump();
     await tester.scrollUntilVisible(
-      find.text('The next page could not be loaded.'),
+      find.text('The next page failed to load.'),
       200,
     );
 
     final text = tester.widget<Text>(
-      find.text('The next page could not be loaded.'),
+      find.text('The next page failed to load.'),
     );
     expect(text.style?.color, const Color(0xFF112233));
   });
@@ -169,7 +168,10 @@ void main() {
 
     await tester.drag(find.byType(ListView), const Offset(0, -1300));
     await tester.pump();
-    await tester.scrollUntilVisible(find.byType(CircularProgressIndicator), 200);
+    await tester.scrollUntilVisible(
+      find.byType(CircularProgressIndicator),
+      200,
+    );
 
     final spinner = tester.widget<CircularProgressIndicator>(
       find.byType(CircularProgressIndicator),
@@ -235,9 +237,7 @@ class _HarnessState extends State<_Harness> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(
-        extensions: [if (widget.style != null) widget.style!],
-      ),
+      theme: ThemeData(extensions: [if (widget.style != null) widget.style!]),
       home: Scaffold(
         body: EndlessScrollView(
           itemCount: count,

@@ -201,7 +201,7 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'The next page could not be loaded.',
+                    'The next page failed to load.',
                     style: style?.errorTextStyle,
                   ),
                   if (widget.onRetry != null)

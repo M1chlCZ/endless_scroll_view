@@ -1,11 +1,15 @@
 # endless_scroll_view
 
+[![CI](https://github.com/M1chlCZ/endless_scroll_view/actions/workflows/ci.yml/badge.svg)](https://github.com/M1chlCZ/endless_scroll_view/actions/workflows/ci.yml)
+[![pub.dev](https://img.shields.io/pub/v/endless_scroll_view.svg)](https://pub.dev/packages/endless_scroll_view)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A Flutter scroll view that loads more items when the user nears the end.
 
 - One widget owns the scroll mechanics and the footer.
 - The caller owns the data, the paging state and the network calls.
 - It works with any state management: Riverpod, Bloc or plain `setState`.
-- No dependencies beyond Flutter.
+- The only dependency is Flutter.
 
 ## Install
 
@@ -71,8 +75,8 @@ class _ItemsPageState extends State<ItemsPage> {
 
 ## Riverpod
 
-The [`example/`](example/) app shows a full Riverpod version with a
-`Notifier`-based paged list. The wiring is short:
+The [`example/`](example/) app shows a Riverpod version with a `Notifier`
+that loads pages. The wiring is short:
 
 ```dart
 final state = ref.watch(pagedItemsProvider);
@@ -88,10 +92,27 @@ EndlessScrollView(
 );
 ```
 
+## Behavior
+
+- The widget requests the next page when the remaining scroll distance is at
+  most `threshold`. The default is 400 pixels.
+- The check also runs after layout. A short first page loads the next page
+  without a scroll.
+- The widget sends no request while `isLoadingMore` is true, while
+  `loadMoreError` is set, or when `hasMore` is false.
+- After a request completes, or after the error clears, the check runs again.
+  The list then fills the viewport.
+- The footer shows the loading view while a request runs. After a failure it
+  shows the error view, with a retry button when `onRetry` is set. When
+  `hasMore` is false and `endOfListBuilder` is set, it shows the end of list
+  view.
+- When `itemCount` is 0, the widget shows `emptyBuilder`. Use it for the
+  initial loading state too.
+
 ## Styling
 
-The default footer reads an `EndlessScrollStyle` theme extension. Register it
-once and every endless list picks it up:
+The default footer reads the `EndlessScrollStyle` theme extension. Register
+it once and every endless list picks it up:
 
 ```dart
 MaterialApp(
@@ -157,23 +178,9 @@ Future<Page> fetchPage(int page) async {
 }
 ```
 
-The [`example/`](example/) app shows all three wirings: a Riverpod list, an
-atomic_ui_kit-styled list and a json_rest_client-backed list.
-
-## Behavior
-
-- The widget requests the next page when the remaining scroll distance is at
-  most `threshold` (400 pixels by default). The check also runs after layout,
-  so a short first page loads the next page without a scroll.
-- The widget sends no requests while `isLoadingMore` is true, while
-  `loadMoreError` is set, or when `hasMore` is false.
-- After a request completes, or after the error clears, the check runs again,
-  so the viewport fills.
-- The footer shows the loading view while a request runs, the error view
-  after a failure (with a retry button when `onRetry` is set), and the
-  end-of-list view when `hasMore` is false and `endOfListBuilder` is set.
-- When `itemCount` is 0, the widget shows `emptyBuilder`. Use it for the
-  initial loading state too.
+The [`example/`](example/) app shows all three wirings with bundled JSON: a
+Riverpod list, an atomic_ui_kit-styled list and a json_rest_client list that
+reads from a local transport. The example needs no network.
 
 ## API
 
