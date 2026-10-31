@@ -94,27 +94,27 @@ EndlessScrollView(
 );
 ```
 
-## Behavior
+## Behaviour
 
-- The widget requests the next page when the remaining scroll distance is at
-  most `threshold`. The default is 400 pixels.
+- The widget asks for the next page once the remaining scroll distance drops to
+  `threshold` or less. The default is 400 pixels.
 - The check also runs after layout. A short first page loads the next page
   without a scroll.
 - The widget sends no request while `isLoadingMore` is true, while
-  `loadMoreError` is set, or when `hasMore` is false.
+  `loadMoreError` is set or when `hasMore` is false.
 - After a request completes, or after the error clears, the check runs again.
   The list then fills the viewport.
 - The footer shows the loading view while a request runs. After a failure it
   shows the error view, with a retry button when `onRetry` is set. When
-  `hasMore` is false and `endOfListBuilder` is set, it shows the end of list
+  `hasMore` is false and `endOfListBuilder` is set, it shows the end-of-list
   view.
 - When `itemCount` is 0, the widget shows `emptyBuilder`. Use it for the
   initial loading state too.
 
 ## Styling
 
-The default footer reads the `EndlessScrollStyle` theme extension. Register
-it once and every endless list picks it up:
+The default footer reads the `EndlessScrollStyle` theme extension. Register it
+once and every endless list picks it up:
 
 ```dart
 MaterialApp(
@@ -131,7 +131,7 @@ MaterialApp(
 
 | Field | Purpose |
 | --- | --- |
-| `loadingColor` | Color of the default loading indicator |
+| `loadingColor` | Colour of the default loading indicator |
 | `errorTextStyle` | Text style of the default error message |
 | `retryStyle` | Button style of the default retry button |
 | `footerPadding` | Padding around the default footer |
@@ -161,8 +161,8 @@ EndlessScrollView(
 ## Using with other packages
 
 The widget works with any data source. With
-[json_rest_client](https://pub.dev/packages/json_rest_client) one page load
-is short:
+[json_rest_client](https://pub.dev/packages/json_rest_client) a page load is
+short:
 
 ```dart
 final client = JsonRestClient(
@@ -252,8 +252,8 @@ controller.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curv
 
 - The widget builds vertical lists only.
 - Set `hasMore` to false when the server has no more items. Otherwise the
-  widget keeps requesting while the content does not fill the viewport.
-- The widget does not deduplicate items. The caller appends each page once.
+  widget keeps asking while the content doesn't fill the viewport.
+- The widget doesn't deduplicate items; the caller appends each page once.
 
 ## Development
 
@@ -262,6 +262,6 @@ flutter test
 cd example && flutter run
 ```
 
-## License
+## Licence
 
 MIT. See [LICENSE](LICENSE).
