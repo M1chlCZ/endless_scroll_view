@@ -180,6 +180,83 @@ void main() {
     key.currentState!.completeLoad();
     await tester.pumpAndSettle();
   });
+  testWidgets('calls onRefresh when the user pulls the list down', (
+    tester,
+  ) async {
+    var refreshes = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EndlessScrollView(
+            itemCount: 3,
+            itemBuilder: (context, index) =>
+                SizedBox(height: 100, child: Text('item $index')),
+            onLoadMore: () {},
+            hasMore: false,
+            onRefresh: () async {
+              refreshes++;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+
+    expect(refreshes, 1);
+  });
+
+  testWidgets('shows placeholder rows during the first load', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EndlessScrollView(
+            itemCount: 0,
+            itemBuilder: (context, index) => const SizedBox.shrink(),
+            onLoadMore: () {},
+            isLoadingMore: true,
+            placeholderItemBuilder: (context, index) =>
+                SizedBox(height: 40, key: ValueKey<int>(index)),
+            placeholderCount: 3,
+            emptyBuilder: (context) => const Text('Nothing here'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey<int>(0)), findsOneWidget);
+    expect(find.byKey(const ValueKey<int>(1)), findsOneWidget);
+    expect(find.byKey(const ValueKey<int>(2)), findsOneWidget);
+    expect(find.text('Nothing here'), findsNothing);
+  });
+
+  testWidgets('uses the provided scroll controller', (tester) async {
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EndlessScrollView(
+            controller: controller,
+            itemCount: 30,
+            itemBuilder: (context, index) =>
+                SizedBox(height: 100, child: Text('item $index')),
+            onLoadMore: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(controller.hasClients, isTrue);
+    controller.jumpTo(500);
+    await tester.pump();
+
+    expect(controller.offset, 500);
+  });
 }
 
 class _Harness extends StatefulWidget {

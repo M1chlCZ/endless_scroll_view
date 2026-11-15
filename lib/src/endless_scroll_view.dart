@@ -31,7 +31,11 @@ class EndlessScrollView extends StatefulWidget {
     this.loadingBuilder,
     this.errorBuilder,
     this.endOfListBuilder,
-  });
+    this.onRefresh,
+    this.placeholderItemBuilder,
+    this.placeholderCount = 6,
+    this.controller,
+  }) : assert(placeholderCount > 0);
 
   /// The number of loaded items.
   final int itemCount;
@@ -81,13 +85,39 @@ class EndlessScrollView extends StatefulWidget {
   /// Shown in the footer when no more items exist.
   final WidgetBuilder? endOfListBuilder;
 
+  /// Called when the user pulls the list down to refresh it.
+  ///
+  /// When set, the widget wraps the list in a [RefreshIndicator]. A short
+  /// list and the empty state stay pullable.
+  final Future<void> Function()? onRefresh;
+
+  /// Builds one placeholder row shown while the first page loads.
+  ///
+  /// When the list is empty, a request runs and this builder is set, the
+  /// widget shows [placeholderCount] placeholder rows instead of
+  /// [emptyBuilder].
+  final IndexedWidgetBuilder? placeholderItemBuilder;
+
+  /// Number of placeholder rows shown during the first load.
+  ///
+  /// Defaults to `6`. Must be positive.
+  final int placeholderCount;
+
+  /// The scroll controller of the list.
+  ///
+  /// Pass one to drive the list from a scroll-to-top button. When null, the
+  /// widget creates and disposes its own controller.
+  final ScrollController? controller;
+
   @override
   State<EndlessScrollView> createState() => _EndlessScrollViewState();
 }
 
 class _EndlessScrollViewState extends State<EndlessScrollView> {
-  final ScrollController _controller = ScrollController();
+  final ScrollController _internalController = ScrollController();
   var _loadRequested = false;
+
+  ScrollController get _controller => widget.controller ?? _internalController;
 
   @override
   void initState() {
@@ -99,6 +129,10 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
   @override
   void didUpdateWidget(EndlessScrollView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      (oldWidget.controller ?? _internalController).removeListener(_onScroll);
+      _controller.addListener(_onScroll);
+    }
     if (oldWidget.isLoadingMore && !widget.isLoadingMore) {
       _loadRequested = false;
     }
@@ -113,7 +147,8 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller.removeListener(_onScroll);
+    _internalController.dispose();
     super.dispose();
   }
 
@@ -152,15 +187,27 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
   @override
   Widget build(BuildContext context) {
     if (widget.itemCount == 0) {
-      return widget.emptyBuilder?.call(context) ?? const SizedBox.shrink();
+      if (widget.isLoadingMore && widget.placeholderItemBuilder != null) {
+        return _wrapRefresh(_placeholderList(context), scrollable: true);
+      }
+      return _wrapRefresh(
+        widget.emptyBuilder?.call(context) ?? const SizedBox.shrink(),
+        scrollable: false,
+      );
     }
     final footerCount = _footerCount;
     final total = widget.itemCount + footerCount;
+    final physics =
+        widget.physics ??
+        (widget.onRefresh != null
+            ? const AlwaysScrollableScrollPhysics()
+            : null);
+    final Widget list;
     if (widget.separatorBuilder != null) {
-      return ListView.separated(
+      list = ListView.separated(
         controller: _controller,
         padding: widget.padding,
-        physics: widget.physics,
+        physics: physics,
         itemCount: total,
         itemBuilder: (context, index) => index < widget.itemCount
             ? widget.itemBuilder(context, index)
@@ -169,15 +216,50 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
             ? widget.separatorBuilder!(context, index)
             : const SizedBox.shrink(),
       );
+    } else {
+      list = ListView.builder(
+        controller: _controller,
+        padding: widget.padding,
+        physics: physics,
+        itemCount: total,
+        itemBuilder: (context, index) => index < widget.itemCount
+            ? widget.itemBuilder(context, index)
+            : _footer(context),
+      );
     }
+    return _wrapRefresh(list, scrollable: true);
+  }
+
+  Widget _placeholderList(BuildContext context) {
+    final builder = widget.placeholderItemBuilder!;
     return ListView.builder(
       controller: _controller,
       padding: widget.padding,
-      physics: widget.physics,
-      itemCount: total,
-      itemBuilder: (context, index) => index < widget.itemCount
-          ? widget.itemBuilder(context, index)
-          : _footer(context),
+      physics: widget.physics ?? const AlwaysScrollableScrollPhysics(),
+      itemCount: widget.placeholderCount,
+      itemBuilder: (context, index) => builder(context, index),
+    );
+  }
+
+  Widget _wrapRefresh(Widget child, {required bool scrollable}) {
+    final onRefresh = widget.onRefresh;
+    if (onRefresh == null) {
+      return child;
+    }
+    if (scrollable) {
+      return RefreshIndicator(onRefresh: onRefresh, child: child);
+    }
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 
