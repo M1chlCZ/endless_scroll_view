@@ -1,6 +1,6 @@
 name: endless_scroll_view
 description: A scroll view that loads more items when the user nears the end.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/M1chlCZ/endless_scroll_view
 topics:
   - infinite-scroll

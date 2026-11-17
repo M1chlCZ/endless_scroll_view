@@ -9,6 +9,8 @@ A Flutter scroll view that loads more items when the user nears the end.
 - One widget owns the scroll mechanics and the footer.
 - The caller owns the data, the paging state and the network calls.
 - It works with any state management: Riverpod, Bloc or plain `setState`.
+- Optional pull-to-refresh, first-load placeholders and a caller-owned scroll
+  controller.
 - The only dependency is Flutter.
 
 ## Install
@@ -201,6 +203,50 @@ reads from a local transport. The example needs no network.
 | `loadingBuilder` | `WidgetBuilder?` | `null` | Loading footer |
 | `errorBuilder` | `WidgetBuilder?` | `null` | Error footer |
 | `endOfListBuilder` | `WidgetBuilder?` | `null` | Footer when no more items exist |
+| `onRefresh` | `Future<void> Function()?` | `null` | Wraps the list in a `RefreshIndicator` |
+| `placeholderItemBuilder` | `IndexedWidgetBuilder?` | `null` | Builds one placeholder row during the first load |
+| `placeholderCount` | `int` | `6` | Number of placeholder rows |
+| `controller` | `ScrollController?` | `null` | Scroll controller, for a scroll-to-top button |
+
+## Refresh, placeholders and scrolling
+
+Pass `onRefresh` to make the list pullable. Short lists and the empty state
+stay pullable too:
+
+```dart
+EndlessScrollView(
+  // ...
+  onRefresh: () async {
+    await reloadFirstPage();
+  },
+);
+```
+
+Pass `placeholderItemBuilder` with `isLoadingMore` to show placeholder rows
+while the first page loads, instead of `emptyBuilder`:
+
+```dart
+EndlessScrollView(
+  // ...
+  isLoadingMore: state.isLoading,
+  placeholderItemBuilder: (context, index) => const _SkeletonRow(),
+  placeholderCount: 8,
+);
+```
+
+Pass your own `controller` to add a scroll-to-top button. The widget attaches
+its near-end listener to the controller you provide:
+
+```dart
+final controller = ScrollController();
+
+EndlessScrollView(
+  // ...
+  controller: controller,
+);
+
+controller.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+```
 
 ## Notes and limitations
 
