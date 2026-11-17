@@ -8,6 +8,8 @@
   show placeholder rows instead of the empty state.
 - Add `controller`: pass a `ScrollController` to add a scroll-to-top button.
   The widget attaches its near-end listener to the provided controller.
+- Add `scrollDirection` and `reverse` for horizontal carousels and reversed
+  chat histories. `onRefresh` requires a vertical list.
 
 ## 0.1.0
 

@@ -35,7 +35,13 @@ class EndlessScrollView extends StatefulWidget {
     this.placeholderItemBuilder,
     this.placeholderCount = 6,
     this.controller,
-  }) : assert(placeholderCount > 0);
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
+  }) : assert(placeholderCount > 0),
+       assert(
+         onRefresh == null || scrollDirection == Axis.vertical,
+         'onRefresh requires a vertical list',
+       );
 
   /// The number of loaded items.
   final int itemCount;
@@ -108,6 +114,17 @@ class EndlessScrollView extends StatefulWidget {
   /// Pass one to drive the list from a scroll-to-top button. When null, the
   /// widget creates and disposes its own controller.
   final ScrollController? controller;
+
+  /// The axis of the list.
+  ///
+  /// Defaults to [Axis.vertical].
+  final Axis scrollDirection;
+
+  /// Whether the list starts at the end.
+  ///
+  /// Use `true` with [Axis.vertical] for a chat history whose newest item is
+  /// at index 0.
+  final bool reverse;
 
   @override
   State<EndlessScrollView> createState() => _EndlessScrollViewState();
@@ -202,6 +219,8 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
     if (widget.separatorBuilder != null) {
       list = ListView.separated(
         controller: _controller,
+        scrollDirection: widget.scrollDirection,
+        reverse: widget.reverse,
         padding: widget.padding,
         physics: physics,
         itemCount: total,
@@ -215,6 +234,8 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
     } else {
       list = ListView.builder(
         controller: _controller,
+        scrollDirection: widget.scrollDirection,
+        reverse: widget.reverse,
         padding: widget.padding,
         physics: physics,
         itemCount: total,
@@ -234,6 +255,8 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
     final builder = widget.placeholderItemBuilder!;
     return ListView.builder(
       controller: _controller,
+      scrollDirection: widget.scrollDirection,
+      reverse: widget.reverse,
       padding: widget.padding,
       physics: _listPhysics,
       itemCount: widget.placeholderCount,
@@ -243,7 +266,7 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
 
   Widget _wrapRefresh(Widget child, {required bool scrollable}) {
     final onRefresh = widget.onRefresh;
-    if (onRefresh == null) {
+    if (onRefresh == null || widget.scrollDirection != Axis.vertical) {
       return child;
     }
     if (scrollable) {

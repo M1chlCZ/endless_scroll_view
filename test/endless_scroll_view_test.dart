@@ -286,6 +286,51 @@ void main() {
     expect(refreshes, 1);
   });
 
+  testWidgets('loads more in a horizontal list', (tester) async {
+    final key = GlobalKey<_HarnessState>();
+    await tester.pumpWidget(
+      _Harness(key: key, initialCount: 5, scrollDirection: Axis.horizontal),
+    );
+
+    final list = tester.widget<ListView>(find.byType(ListView));
+    expect(list.scrollDirection, Axis.horizontal);
+
+    await tester.drag(find.byType(ListView), const Offset(-900, 0));
+    await tester.pump();
+
+    expect(key.currentState!.loadCalls, 1);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('loads more in a reversed list', (tester) async {
+    final key = GlobalKey<_HarnessState>();
+    await tester.pumpWidget(
+      _Harness(key: key, initialCount: 20, reverse: true),
+    );
+
+    final list = tester.widget<ListView>(find.byType(ListView));
+    expect(list.reverse, isTrue);
+
+    await tester.drag(find.byType(ListView), const Offset(0, 1300));
+    await tester.pump();
+
+    expect(key.currentState!.loadCalls, 1);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('rejects pull-to-refresh on a horizontal list', (tester) async {
+    expect(
+      () => EndlessScrollView(
+        itemCount: 1,
+        itemBuilder: (context, index) => const SizedBox.shrink(),
+        onLoadMore: () {},
+        scrollDirection: Axis.horizontal,
+        onRefresh: () async {},
+      ),
+      throwsAssertionError,
+    );
+  });
+
   testWidgets('keeps short lists pullable with custom physics', (tester) async {
     var refreshes = 0;
     await tester.pumpWidget(
@@ -325,6 +370,8 @@ class _Harness extends StatefulWidget {
     this.emptyBuilder,
     this.endOfListBuilder,
     this.style,
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
   });
 
   final int initialCount;
@@ -335,6 +382,8 @@ class _Harness extends StatefulWidget {
   final WidgetBuilder? emptyBuilder;
   final WidgetBuilder? endOfListBuilder;
   final EndlessScrollStyle? style;
+  final Axis scrollDirection;
+  final bool reverse;
 
   @override
   State<_Harness> createState() => _HarnessState();
@@ -373,8 +422,16 @@ class _HarnessState extends State<_Harness> {
       home: Scaffold(
         body: EndlessScrollView(
           itemCount: count,
-          itemBuilder: (context, index) =>
-              SizedBox(height: 100, child: Text('Item $index')),
+          scrollDirection: widget.scrollDirection,
+          reverse: widget.reverse,
+          itemBuilder: (context, index) {
+            final horizontal = widget.scrollDirection == Axis.horizontal;
+            return SizedBox(
+              width: horizontal ? 400 : null,
+              height: horizontal ? null : 100,
+              child: Text('Item $index'),
+            );
+          },
           onLoadMore: _load,
           hasMore: widget.hasMore,
           isLoadingMore: loading,

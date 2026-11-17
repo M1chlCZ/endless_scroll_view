@@ -207,6 +207,38 @@ reads from a local transport. The example needs no network.
 | `placeholderItemBuilder` | `IndexedWidgetBuilder?` | `null` | Builds one placeholder row during the first load |
 | `placeholderCount` | `int` | `6` | Number of placeholder rows |
 | `controller` | `ScrollController?` | `null` | Scroll controller, for a scroll-to-top button |
+| `scrollDirection` | `Axis` | `Axis.vertical` | Axis of the list |
+| `reverse` | `bool` | `false` | Starts the list at the end, for chat histories |
+
+## Horizontal and reversed lists
+
+Set `scrollDirection: Axis.horizontal` for a paged carousel. Items need a
+width; the near-end threshold measures the horizontal distance:
+
+```dart
+EndlessScrollView(
+  scrollDirection: Axis.horizontal,
+  itemCount: items.length,
+  itemBuilder: (context, index) =>
+      SizedBox(width: 400, child: Card(child: Text(items[index]))),
+  onLoadMore: loadMore,
+);
+```
+
+Set `reverse: true` for a chat history whose newest item is at index 0. The
+list starts at the end and requests older pages as it scrolls back:
+
+```dart
+EndlessScrollView(
+  reverse: true,
+  itemCount: messages.length,
+  itemBuilder: (context, index) => MessageTile(message: messages[index]),
+  onLoadMore: loadOlder,
+);
+```
+
+Both options work together. `onRefresh` requires a vertical list and fails an
+assertion on a horizontal one; pull-to-refresh is vertical gesture.
 
 ## Refresh, placeholders and scrolling
 
@@ -250,7 +282,6 @@ controller.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curv
 
 ## Notes and limitations
 
-- The widget builds vertical lists only.
 - Set `hasMore` to false when the server has no more items. Otherwise the
   widget keeps asking while the content doesn't fill the viewport.
 - The widget doesn't deduplicate items; the caller appends each page once.
