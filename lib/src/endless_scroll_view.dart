@@ -197,11 +197,7 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
     }
     final footerCount = _footerCount;
     final total = widget.itemCount + footerCount;
-    final physics =
-        widget.physics ??
-        (widget.onRefresh != null
-            ? const AlwaysScrollableScrollPhysics()
-            : null);
+    final physics = _listPhysics;
     final Widget list;
     if (widget.separatorBuilder != null) {
       list = ListView.separated(
@@ -230,12 +226,16 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
     return _wrapRefresh(list, scrollable: true);
   }
 
+  ScrollPhysics? get _listPhysics => widget.onRefresh != null
+      ? AlwaysScrollableScrollPhysics(parent: widget.physics)
+      : widget.physics;
+
   Widget _placeholderList(BuildContext context) {
     final builder = widget.placeholderItemBuilder!;
     return ListView.builder(
       controller: _controller,
       padding: widget.padding,
-      physics: widget.physics ?? const AlwaysScrollableScrollPhysics(),
+      physics: _listPhysics,
       itemCount: widget.placeholderCount,
       itemBuilder: (context, index) => builder(context, index),
     );
@@ -255,7 +255,10 @@ class _EndlessScrollViewState extends State<EndlessScrollView> {
         builder: (context, constraints) => SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            constraints: BoxConstraints(
+              minWidth: constraints.maxWidth,
+              minHeight: constraints.maxHeight,
+            ),
             child: child,
           ),
         ),

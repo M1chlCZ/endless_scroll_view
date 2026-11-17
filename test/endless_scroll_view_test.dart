@@ -257,6 +257,61 @@ void main() {
 
     expect(controller.offset, 500);
   });
+
+  testWidgets('pulls to refresh on the default empty state', (tester) async {
+    var refreshes = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EndlessScrollView(
+            itemCount: 0,
+            itemBuilder: (context, index) => const SizedBox.shrink(),
+            onLoadMore: () {},
+            onRefresh: () async {
+              refreshes++;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.fling(
+      find.byType(SingleChildScrollView),
+      const Offset(0, 400),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(refreshes, 1);
+  });
+
+  testWidgets('keeps short lists pullable with custom physics', (tester) async {
+    var refreshes = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EndlessScrollView(
+            itemCount: 3,
+            itemBuilder: (context, index) =>
+                SizedBox(height: 100, child: Text('item $index')),
+            onLoadMore: () {},
+            hasMore: false,
+            physics: const ClampingScrollPhysics(),
+            onRefresh: () async {
+              refreshes++;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+
+    expect(refreshes, 1);
+  });
 }
 
 class _Harness extends StatefulWidget {
