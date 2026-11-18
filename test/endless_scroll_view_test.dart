@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:endless_scroll_view/endless_scroll_view.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:atomic_ui_kit/atomic_ui_kit.dart';
 import 'package:endless_scroll_view/endless_scroll_view.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:json_rest_client/json_rest_client.dart';

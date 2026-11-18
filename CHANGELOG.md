@@ -10,6 +10,8 @@
   The widget attaches its near-end listener to the provided controller.
 - Add `scrollDirection` and `reverse` for horizontal carousels and reversed
   chat histories. `onRefresh` requires a vertical list.
+- Require Flutter 3.47 and Dart 3.13, and use the `material_ui` package for
+  Material widgets.
 
 ## 0.1.0
 
